@@ -175,4 +175,245 @@ string data type was used to store words in the variable such as `("this is stri
 - `float` &#8594; `0.0`
 - `boolean` &#8594; `false`
 
-<!-- ## Basic Data type -->
+## Flow Control
+
+code example of control flow could be seen in `flowcontrol.go`
+
+### Basic if - else if - else
+
+as usual programming language go also cover conditional using `if` `else if` and `else`. example:
+
+```go
+var score = 60
+
+if score > 70 {
+    fmt.Println("great")
+} else if condition > 50 {
+    fmt.Println("well done")
+} else {
+    fmt.Println("could be improve")
+}
+```
+
+### Temporary If - else
+
+unique in golang, we could use a temporary variable which only exists on the if - else if - else scope. ex:
+
+```go
+var point = 8840.0
+
+if percent := point / 100; percent >= 100 {
+    fmt.Printf("%.1f%s perfect!\n", percent, "%")
+} else if percent >= 70 {
+    fmt.Printf("%.1f%s good\n", percent, "%")
+} else {
+    fmt.Printf("%.1f%s not bad\n", percent, "%")
+}
+```
+
+### basic switch case
+
+as the other programming language go also support `switch` case coditional scenario. example :
+
+```go
+var grade = "A"
+
+switch grade {
+    case "A":
+        fmt.Println("excellent")
+    case "B":
+        fmt.Println("great")
+    case "C":
+        fmt.Println("well done")
+    case "D", "F":
+        fmt.Println("need improvement")
+    default:
+        {
+            fmt.Println("default value")
+        }
+}
+```
+
+the `{}` was optional on switch case.
+
+unlike other language, Golang switch case also support the if - else if - else style of condition, ex:
+
+```go
+var point = 6
+
+switch {
+case point == 8:
+    fmt.Println("perfect")
+case (point < 8) && (point > 3):
+    fmt.Println("awesome")
+default:
+    {
+        fmt.Println("not bad")
+        fmt.Println("you need to learn more")
+    }
+}
+```
+
+unique in golang, the switch case didn't need a `break` keyword to prevent other case to be checked and run. if we want the other case to be checked and run, we need to use `fallthrough` keyword, example:
+
+```go
+var point = 6
+
+switch {
+case point == 8:
+    fmt.Println("perfect")
+case (point < 8) && (point > 3):
+    fmt.Println("awesome")
+    fallthrough
+case point < 5:
+    fmt.Println("you need to learn more")
+default:
+    {
+        fmt.Println("not bad")
+        fmt.Println("you need to learn more")
+    }
+}
+
+/*
+Output:
+awsome
+you need to learn more
+*/
+```
+
+### for loop
+
+looping in golang use for loop with the structure of:
+
+```go
+
+for i := 0; i < 5; i++ {
+    fmt.Println(i)
+}
+
+```
+
+golang didn't have `while` or `do-while` statement, instead the `for` loop have the capabilities of `while` loop. example:
+
+```go
+i := 0
+for i < 5 {
+    fmt.Println(i)
+    i++
+}
+```
+
+even more unique in golang `for`, we could make an infinite loop, which in other language we need to use `while true {}` with this structure:
+
+```go
+for {
+    fmt.Println("infinite loop")
+    break // to ensure it didn't really infinite and overload our machine
+}
+```
+
+golang also used the `continue` and `break` keyword to control the flow inside the loop. example:
+
+```go
+for i := 1; i <= 10; i++ {
+    if i % 2 == 1 {
+        continue
+    }
+    if i == 7 {
+        break
+    }
+
+    fmt.Println("odd number", i)
+}
+```
+
+In golang we could use _label_ to label our loop, so when we use break, we could break through the label we had set. here is the example:
+
+```go
+outerLoopLabel:
+for i := 0; i < 5; i++ {
+    for j := 0; j < 5; j++ {
+        if i == 3 {
+            break outerLoopLabel
+        }
+        fmt.Print("matrix [", i, "][", j, "]", "\n")
+    }
+}
+```
+
+golang have other method to loop through array, slice and map, etc. Using the `for` - `range` method.
+
+- loop through `string` (_rune[]_)
+
+```go
+var s = "123" // string
+for i, v := range s {
+    fmt.Println("Index=", i, "Value=", v)
+}
+
+/*
+Output:
+Index= 0 Value= 49
+Index= 1 Value= 50
+Index= 2 Value= 51
+*/
+```
+
+- loop through `array`
+
+```go
+var arr = [5]int{10, 20, 30, 40, 50} // array
+for _, v := range arr {
+    fmt.Println("Value=", v)
+}
+/*
+Output:
+Value= 10
+Value= 20
+Value= 30
+Value= 40
+Value= 50
+*/
+```
+
+- loop through `slice`
+
+```go
+var sli = arr[0:2] // slice
+for _, v := range sli {
+    fmt.Println("Value=", v)
+}
+/*
+Output:
+Value= 10
+Value= 20
+*/
+```
+
+- loop through `map`
+
+```go
+var kv = map[byte]int{'a': 0, 'b': 1, 'c': 2} // map
+for k, v := range kv {
+    fmt.Println("Key=", k, "Value=", v)
+}
+
+/*
+Output:
+Key= 97 Value= 0
+Key= 98 Value= 1
+Key= 99 Value= 2
+*/
+```
+
+- loop with range (like python)
+
+```go
+for i := range 5 {
+    fmt.Print(i) // 01234
+}
+/*
+Output:
+01234
+*/
+```

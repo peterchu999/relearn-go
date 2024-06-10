@@ -10,5 +10,6 @@ func main() {
 	*/
 	VariableMain()
 	LDataType()
+	FlowControl()
 	fmt.Println("Hello World")
 }
