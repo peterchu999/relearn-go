@@ -361,50 +361,50 @@ Index= 2 Value= 51
 
 - loop through `array`
 
-```go
-var arr = [5]int{10, 20, 30, 40, 50} // array
-for _, v := range arr {
-    fmt.Println("Value=", v)
-}
-/*
-Output:
-Value= 10
-Value= 20
-Value= 30
-Value= 40
-Value= 50
-*/
-```
+  ```go
+  var arr = [5]int{10, 20, 30, 40, 50} // array
+  for _, v := range arr {
+      fmt.Println("Value=", v)
+  }
+  /*
+  Output:
+  Value= 10
+  Value= 20
+  Value= 30
+  Value= 40
+  Value= 50
+  */
+  ```
 
 - loop through `slice`
 
-```go
-var sli = arr[0:2] // slice
-for _, v := range sli {
-    fmt.Println("Value=", v)
-}
-/*
-Output:
-Value= 10
-Value= 20
-*/
-```
+  ```go
+  var sli = arr[0:2] // slice
+  for _, v := range sli {
+      fmt.Println("Value=", v)
+  }
+  /*
+  Output:
+  Value= 10
+  Value= 20
+  */
+  ```
 
 - loop through `map`
 
-```go
-var kv = map[byte]int{'a': 0, 'b': 1, 'c': 2} // map
-for k, v := range kv {
-    fmt.Println("Key=", k, "Value=", v)
-}
+  ```go
+  var kv = map[byte]int{'a': 0, 'b': 1, 'c': 2} // map
+  for k, v := range kv {
+      fmt.Println("Key=", k, "Value=", v)
+  }
 
-/*
-Output:
-Key= 97 Value= 0
-Key= 98 Value= 1
-Key= 99 Value= 2
-*/
-```
+  /*
+  Output:
+  Key= 97 Value= 0
+  Key= 98 Value= 1
+  Key= 99 Value= 2
+  */
+  ```
 
 - loop with range (like python)
 
