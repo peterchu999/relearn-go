@@ -110,7 +110,7 @@ data = append(data, data2...) // concat : [1, 2, 3, 4, 5, 6, 7]
 
 Map in golang was similiar to hashmpa in java, it's key-value pair.
 
-## initialize map
+### initialize map
 
 here is the example of map initialization:
 
@@ -128,7 +128,7 @@ var memo3 = *new(map[string]int)
 
 `memo3` would hold the address instead of the map value.
 
-## check if key exists
+### check if key exists
 
 to check if the spesific key exists in the map we could access the map this way :
 
@@ -142,7 +142,7 @@ fmt.Println(value) // 1
 fmt.Println(isExists) // true
 ```
 
-## delete item in array
+### delete item in array
 
 to remove the elemen in array, so that the checking above would return false. `delete` function needed. example:
 
@@ -156,4 +156,170 @@ delete(memo, "laundry")
 var value, isExists = memo["laundry"]
 fmt.Println(value) // 0
 fmt.Println(isExists) // false
+```
+
+## Function
+
+### Create a function
+
+to create a function, `func` keyword is used, with the example of below:
+
+```go
+func functionName (parameter1 int, parameter2 int) int {
+    return parameter1 + parameter2
+}
+```
+
+### Function with multiple return value
+
+there is 2 ways to return multiple value in golang
+
+- reguler
+
+  ```go
+      package main
+
+      import "fmt"
+      import "math"
+
+      func calculate(d float64) (float64, float64) {
+          var area = math.Pi * math.Pow(d / 2, 2)
+          var circumference = math.Pi * d
+          return area, circumference
+      }
+  ```
+
+- predefined return
+  ```go
+      func calculate(d float64) (area float64, circumference float64) {
+          area = math.Pi * math.Pow(d / 2, 2)
+          circumference = math.Pi * d
+          return
+      }
+  ```
+
+### Vardiac Function
+
+vardiac function is used to have unlimited amount of parameter.
+
+Example of vardiac function:
+
+```go
+func sum(numbers ...int) int {
+    res := 0
+    for num := range numbers {
+        res += num
+    }
+    return res
+}
+
+// called by
+acc := sum(1, 2, 3, 4, 5, 6) // acc = 21
+numbers := []int {1, 2, 3, 4, 5, 6}
+acc2 := sum(numbers...) // acc2 = 21
+```
+
+we could combine the usual function parameter with vardiac parameter, example:
+
+```go
+func operation(operand string, numbers ...int) int {
+    switch operand {
+        case "+":
+            fmt.Println(operand, numbers)
+        case "-":
+            fmt.Println(operand, numbers)
+        default:
+            fmt.Println("invalid operand")
+    }
+}
+
+operation("+", 1, 2, 3)
+//or
+operation("+", []int{1, 2, 3}...)
+```
+
+### Closure / Anoymus function
+
+we could store a function inside a variable, or have it as return value, here is the example
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    var numbers = []int{2, 3, 0, 4, 3, 2, 0, 4, 2, 0, 3}
+
+    var newNumbers = func(min int) []int {
+        var r []int
+        for _, e := range numbers {
+            if e < min {
+                continue
+            }
+            r = append(r, e)
+        }
+        return r
+    }(3)
+
+    fmt.Println("original number :", numbers)
+    fmt.Println("filtered number :", newNumbers)
+}
+```
+
+and
+
+```go
+func findMax(numbers []int, max int) (int, func() []int) {
+    var res []int
+    for _, e := range numbers {
+        if e <= max {
+            res = append(res, e)
+        }
+    }
+    return len(res), func() []int {
+        return res
+    }
+}
+```
+
+### Function as parameter
+
+we could have a function as another function parameter, here is what it looks like:
+
+```go
+package main
+
+import "fmt"
+import "strings"
+
+func filter(data []string, callback func(string) bool) []string {
+    var result []string
+    for _, each := range data {
+        if filtered := callback(each); filtered {
+            result = append(result, each)
+        }
+    }
+    return result
+}
+```
+
+We could make an alias to gave our function, example:
+
+```go
+package main
+
+import "fmt"
+import "strings"
+
+type FilterCallback func(string) bool
+
+func filter(data []string, callback FilterCallback) []string {
+    var result []string
+    for _, each := range data {
+        if filtered := callback(each); filtered {
+            result = append(result, each)
+        }
+    }
+    return result
+}
 ```
