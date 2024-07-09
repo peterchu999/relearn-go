@@ -323,3 +323,382 @@ func filter(data []string, callback FilterCallback) []string {
     return result
 }
 ```
+
+## Pointer
+
+pointer is an reference of a value in memory, usually pointer hold the **address** of the value. pointer in golang is very similiar with c pointer.
+
+### Example of pointer
+
+```go
+var numberA int = 4
+var numberB *int = &numberA
+
+fmt.Println("numberA (value)   :", numberA)  // 4
+fmt.Println("numberA (address) :", &numberA) // 0xc20800a220
+
+fmt.Println("numberB (value)   :", *numberB) // 4
+fmt.Println("numberB (address) :", numberB)  // 0xc20800a220
+```
+
+since pointer is a reference, same with slice, when the original data got change the reference value also changed
+
+```go
+var numberA int = 4
+var numberB *int = &numberA
+
+fmt.Println("numberA (value)   :", numberA)  // 4
+fmt.Println("numberA (address) :", &numberA) // 0xc20800a220
+
+numberA = 5
+
+fmt.Println("numberB (value)   :", *numberB) // 5
+fmt.Println("numberB (address) :", numberB)  // 0xc20800a220
+```
+
+### Pass pointer
+
+when we are using basic data type as parameter, usually it is pass by value scenario, if we want to make side effect we could pass the pointer to pass it by reference. example:
+
+```go
+func main() {
+	var a int = 10
+	unchanged(a, 11)
+	fmt.Println(a) // 10
+	change(&a, 12)
+	fmt.Println(a) // 12
+}
+
+func unchanged(original int, value int) {
+	original = value
+}
+
+func change(original *int, value int) {
+	*original = value
+}
+```
+
+## Struct
+
+go doens't have class like any other oop language, so it have struct instead like c language.
+
+struct is a bunch of variable and, or method that are group together to become a new data type.
+
+### define and initialize struct
+
+here is the example of how to define a new struct and initilize it's _object_ to be store in variable
+
+```go
+type StructName struct {
+    name string
+    age int
+}
+
+//initialize it's object
+
+var s StructName // initialize struct with each property zero value
+var s2 = StructName{} // initialize struct with each property zero value
+var s3 = StructName{"name", 11} // initialize struct with property
+s4 := StructName{"name", 11} // initialize struct with property
+
+
+// set value
+s.age = 3
+s.name = "golang"
+
+fmt.Println(s.age, s.name) // 3 golang
+```
+
+### struct pointer
+
+struct object could have pointer too like any other data type, and we could use it to pass by reference on a function. Example
+
+```go
+type Student struct {
+	name string
+	age int
+}
+
+func main() {
+	var s = Student {
+		"golang",
+		10,
+	}
+	unchanged(s, 11)
+	fmt.Println(s) // {golang 10}
+	change(&s, 12)
+	fmt.Println(s) // {golang 12}
+}
+
+func unchanged(original Student, value int) {
+	original.age = value
+}
+
+func change(original *Student, value int) {
+	original.age = value
+}
+```
+
+**PS:** notice that we didn't use `*` in our `change` function ?. in struct we could access the value of our struct directly without using the `*`.
+
+### Nested Struct
+
+struct could be the data type of other struct too, here is the example:
+
+```go
+type person struct {
+    name string
+    age  int
+}
+
+type student struct {
+    person
+    age   int
+    grade int
+}
+
+// or
+
+type student struct {
+    person struct {
+        name string
+        age  int
+    }
+    age   int
+    grade int
+}
+
+```
+
+### Anonymus struct
+
+we could directly use struct in variable instead of making it's type, or we could initialize struct object without given the name of the struct.
+
+```go
+var s1 = struct {
+    person
+    grade int
+}{}
+```
+
+### tag in struct
+
+tag is an optional property in struct, it could be used for encode / decode data process, usually used in decode and encoding JSON.
+
+```go
+type person struct {
+    name string `tag1`
+    age  int    `tag2`
+}
+```
+
+### Method in struct
+
+we could attached a method / function into a struct. and there is two way of attaching it, either by reference or value
+
+```go
+type student struct {
+    name  string
+    grade int
+}
+
+func (s student) sayHello() {
+    fmt.Println("halo", s.name)
+}
+
+func (s student) getNameAt(i int) string {
+    return strings.Split(s.name, " ")[i-1]
+}
+
+func (s student) changeName1(name string) {
+    fmt.Println("---> on changeName1, name changed to", name)
+    // the object name won't change
+    s.name = name
+}
+
+func (s *student) changeName2(name string) {
+    fmt.Println("---> on changeName2, name changed to", name)
+    // object name would change
+    s.name = name
+}
+```
+
+## Interface
+
+Interface is type of contract that need to be fullfilled by the object. the interface concept in golang is similiar with any other language, the difference is only it need to be fullfill by struct
+
+here is the example:
+
+```go
+type Animal interface {
+	move(x int)
+	getCoordinate() int
+}
+
+type Bird struct {
+	coordinate int
+}
+
+func (bird *Bird) move(x int) {
+	fmt.Println("Fly", x)
+	bird.coordinate += x
+}
+
+func (bird *Bird) getCoordinate() int {
+	return bird.coordinate
+}
+
+type Fish struct {
+	coordinate int
+}
+
+func (fish *Fish) move(x int) {
+	fmt.Println("Swin", x)
+	fish.coordinate -= x
+}
+
+func (fish *Fish) getCoordinate() int {
+	return fish.coordinate
+}
+
+func (fish *Fish) sayHello() {
+	fmt.Println("hello")
+}
+
+func main() {
+	var bird Animal = &Bird{}
+	var fish Animal = &Fish{}
+	bird.move(1)
+	fmt.Println(bird.getCoordinate())
+	fish.move(1)
+	fmt.Println(fish.getCoordinate())
+	// used only fish method by casting to fish
+	fish.(*Fish).sayHello()
+}
+```
+
+PS: notice that we are using `&` and `*` to access our struct, this happen because we want to create a struct with pointer refence on it.
+
+### Embedded Interface
+
+we could have 2 or more interface merged into 1 interface by embedding it. here is the example.
+
+```go
+type Human interface {
+    getAge() int
+    getName() string
+    sayHello()
+}
+
+type Worker interface {
+    work()
+}
+
+type SalaryMan interface {
+    Human
+    Worker
+}
+
+type Sales struct {
+	age int
+	name string
+}
+
+func (sales Sales) getAge() int {
+	return sales.age
+}
+
+func (sales Sales) getName() string {
+	return sales.name
+}
+
+func (sales Sales) sayHello() {
+	fmt.Println("Hello, my name is", sales.name)
+}
+
+func (sales Sales) work() {
+	fmt.Println("Gotta work well")
+}
+func main() {
+	var salaryMan SalaryMan = &Sales{}
+	fmt.Println(salaryMan)
+}
+```
+
+### any / empty interface
+
+even thought interface is a contract, what would happen if it's empty ? it become any. here is some example of any and empty interface:
+
+```go
+var json map[string]interface{} = make(map[string]interface{})
+var jsonAny map[string]any = make(map[string]any)
+json["key1"] = 1
+json["key2"] = "value"
+
+jsonAny["key1"] = 12
+jsonAny["key2"] = "string"
+fmt.Println(json, jsonAny) // map[key1:1 key2:value] map[key1:12 key2:string]
+```
+
+## Reflect
+
+reflect is a technique to get the variable metadata to advancedly manipulate the variable. reflect in golang itself is a library that have a lot of function for reflect technique usage. more of reflect https://pkg.go.dev/reflect
+
+### Common / Basic Reflect Usage
+
+- Checking data type
+
+  ```go
+  var number = 23
+  var reflectValue = reflect.ValueOf(number)
+
+  fmt.Println(reflect.TypeOf(number)) // int
+  fmt.Println("variable type :", reflectValue.Type()) // variable type : int
+  fmt.Println("variable value :", reflectValue.Interface()) // variable value : 23
+  ```
+
+- accessing object property
+
+  ```go
+  type student struct {
+      Name  string
+      Grade int
+  }
+  func (s *student) getPropertyInfo() {
+      var reflectValue = reflect.ValueOf(s)
+
+      if reflectValue.Kind() == reflect.Ptr {
+          reflectValue = reflectValue.Elem()
+      }
+
+      var reflectType = reflectValue.Type()
+
+      for i := 0; i < reflectValue.NumField(); i++ {
+          fmt.Println("property name:", reflectType.Field(i).Name)
+          fmt.Println("data type :", reflectType.Field(i).Type)
+          fmt.Println("value     :", reflectValue.Field(i).Interface())
+          fmt.Println("")
+      }
+  }
+  ```
+
+- accessing method from object
+
+  ```go
+  func (s *student) SetName(name string) {
+      s.Name = name
+  }
+
+  func main() {
+      var s1 = &student{Name: "john wick", Grade: 2}
+      fmt.Println("name :", s1.Name) // john wick
+
+      var reflectValue = reflect.ValueOf(s1)
+      var method = reflectValue.MethodByName("SetName")
+      method.Call([]reflect.Value{
+          reflect.ValueOf("wick"),
+      })
+
+      fmt.Println("name :", s1.Name) // wick
+  }
+  ```
