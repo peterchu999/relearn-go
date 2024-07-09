@@ -6,5 +6,8 @@ func main() {
 	// BasicChannel()
 	// BasicChannel2()
 	// BasicChannel3()
-	BasicBufferChannel()
+	// BasicBufferChannel()
+	// BasicNoSelect()
+	// BasicSelect()
+	// Timeout()
 }

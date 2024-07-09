@@ -198,3 +198,162 @@ receive data 4
 explantion:
 
 - our channel could hold maximum 2 value so we could send over 3 data (1 was received immediatly) before it could send more value
+
+### Select Channel
+
+what happen when there is 2 channel and we want to process it simultaneously ? if we use usual way our channel is receiving code would got block. so here is the example
+
+we got two function to calculate maximum and average:
+
+```go
+func getAverage(numbers []int, ch chan float64) {
+    var sum = 0
+    for _, e := range numbers {
+        sum += e
+    }
+    ch <- float64(sum) / float64(len(numbers))
+}
+
+func getMax(numbers []int, ch chan int) {
+    var max = numbers[0]
+    for _, e := range numbers {
+        if max < e {
+            max = e
+        }
+    }
+    ch <- max
+}
+```
+
+here is what we know about processing channel:
+
+```go
+runtime.GOMAXPROCS(2)
+var numbers = []int{3, 4, 3, 5, 6, 3, 2, 2, 6, 3, 4, 6, 3}
+fmt.Println("numbers :", numbers)
+
+var ch1 = make(chan float64)
+go getAverage(numbers, ch1)
+
+var ch2 = make(chan int)
+go getMax(numbers, ch2)
+
+var avg = <-ch1
+fmt.Printf("Avg \t: %.2f \n", avg)
+var max = <-ch2
+fmt.Printf("Max \t: %d \n", max)
+```
+
+using this code, no matter how fast the `getMax` function calculated, it need to wait for `getAverage` function to put the value to channel `ch1` before the code below `<-ch1` got execute.
+
+here is where the `select` come to help. by using select we could execute the line of code which the got value first.
+
+```go
+runtime.GOMAXPROCS(2)
+
+var numbers = []int{3, 4, 3, 5, 6, 3, 2, 2, 6, 3, 4, 6, 3}
+fmt.Println("numbers :", numbers)
+
+var ch1 = make(chan float64)
+go getAverage(numbers, ch1)
+
+var ch2 = make(chan int)
+go getMax(numbers, ch2)
+
+for i := 0; i < 2; i++ {
+    select {
+    case avg := <-ch1:
+        fmt.Printf("Avg \t: %.2f \n", avg)
+    case max := <-ch2:
+        fmt.Printf("Max \t: %d \n", max)
+    }
+}
+```
+
+explanation:
+
+- the select part make sure, whoever channel send data first got process.
+- the for loop make sure we execute the seelct 2 times since we got 2 channel and 2 goroutine execution to that channel
+
+**PS:** note that channel in goroutine were made for communication and data sharing and not for execution control. the `select` use case would better shown in later part of concurrency concept
+
+### Channel Range and Close
+
+`for - range` syntax could be also be used for channel loop execution. let say we had a goroutine that produce 20 data. we would code it this way for now:
+
+```go
+func sendMessage(ch chan<- string) {
+    for i := 0; i < 20; i++ {
+        ch <- fmt.Sprintf("data %d", i)
+    }
+    close(ch)
+}
+
+func printMessage(ch <-chan string) {
+    for i := 0; i < 20; i++ {
+        message := <-ch
+        fmt.Println(message)
+    }
+}
+```
+
+we used constant 20 value in both part, however what happen if we forgot to update either part if the code changes ? we could use `for - range` loop for `printMessage` function.
+
+```go
+func printMessage(ch <-chan string) {
+    for message := range ch {
+        fmt.Println(message)
+    }
+}
+```
+
+now the printMessage would print all of the message untill the channel are closed by `close(ch)` function
+
+### Channel Timeout
+
+since we are usually just setting the boundaries of value retriving from channel via our loop condition, or channel closed. we could actually set a timeout condition to our loop that wait for the channel value. here is what it looks like
+
+```go
+func sendData(ch chan<- int) {
+    for i := 0; true; i++ {
+        ch <- i
+        time.Sleep(time.Duration(i) * time.Second)
+    }
+}
+
+func retreiveData(ch <-chan int) {
+    loop:
+    for {
+        select {
+        case data := <-ch:
+            fmt.Print(`receive data "`, data, `"`, "\n")
+        case <-time.After(time.Second * 5):
+            fmt.Println("timeout. no activities under 5 seconds")
+            break loop
+        }
+    }
+}
+
+func Timeout() {
+ 	runtime.GOMAXPROCS(2)
+
+    var messages = make(chan int)
+
+    go sendData(messages)
+    retreiveData(messages)
+}
+```
+
+OUTPUT:
+
+```sh
+receive data "0"
+receive data "1"
+receive data "2"
+receive data "3"
+receive data "4"
+receive data "5"
+timeout. no activities under 5 seconds
+```
+
+since we are setting out sleep period based on our loop index, when the loop index are more than 5 the system would wait more than 5 second, therefore triggering the timeout scope block `case <-time.After(time.Second * 5)` and break the loop.
