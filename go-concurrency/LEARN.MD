@@ -357,3 +357,174 @@ timeout. no activities under 5 seconds
 ```
 
 since we are setting out sleep period based on our loop index, when the loop index are more than 5 the system would wait more than 5 second, therefore triggering the timeout scope block `case <-time.After(time.Second * 5)` and break the loop.
+
+## Sync
+
+golang provide `sync` package to manage goroutine
+
+### Wait Group
+
+`sync.WaitGroup` is use to synchronize goroutine flow, it is crafted to manage goroutine easier and effective compared to our mangement using channel
+
+#### Implementation
+
+```go
+package main
+
+import "sync"
+import "runtime"
+import "fmt"
+
+func doPrint(wg *sync.WaitGroup, message string) {
+    defer wg.Done()
+    fmt.Println(message)
+}
+
+func main() {
+    runtime.GOMAXPROCS(2)
+
+    var wg sync.WaitGroup
+
+    for i := 0; i < 5; i++ {
+        var data = fmt.Sprintf("data %d", i)
+
+        wg.Add(1)
+        go doPrint(&wg, data)
+    }
+
+    wg.Wait()
+}
+```
+
+in this implemenetation the main process would wait untill the waitgroup empty before ended the process, it different with channel that are waiting for spesific channel. this waitgroup wait for all goroutine.
+
+### Mutex
+
+Mutex "mutual exclusion" is used to handle a **race condition**. a race condition is a condition where more than 1 goroutine access the same piece of data at the same time, therefore the data would be messy (example when a process are reading a data and the other are updating it, we dont know the get result are updated or not).
+
+Mutex change the data access level to be exclusive so it could only be access by 1 goroutine at time. If a race condition occur, only the first gorutine that access the data could access it at time, other goroutine need to wait untill the data finished to be access by this goroutine before accesing it.
+
+#### race condition code
+
+```go
+package main
+
+import (
+	"fmt"
+	"runtime"
+	"sync"
+)
+
+type counter struct {
+    val int
+}
+
+func (c *counter) Add(int) {
+    c.val++
+}
+
+func (c *counter) Value() (int) {
+    return c.val
+}
+
+func RaceCondition() {
+    runtime.GOMAXPROCS(2)
+
+    var wg sync.WaitGroup
+    var meter counter
+
+    for i := 0; i < 1000; i++ {
+        wg.Add(1)
+
+        go func() {
+            for j := 0; j < 1000; j++ {
+                meter.Add(1)
+            }
+
+            wg.Done()
+        }()
+    }
+
+    wg.Wait()
+    fmt.Println(meter.Value())
+}
+```
+
+OUTPUT:
+
+```
+785426
+783606
+786793
+```
+
+explanation:
+
+- inconsistent output throughout testing, and it suppose to be 1000 \* 1000 = 1000000
+- the race condition occur could be detected via this command `go run -race *.go`
+
+```sh
+981929
+Found 2 data race(s)
+exit status 66
+```
+
+#### mutex help
+
+to prevent the race condition like above, we need to implements mutex to the data source. here is what the code looks like
+
+```go
+type counter struct {
+    sync.Mutex
+    val int
+}
+
+func (c *counter) Add(int) {
+    c.Lock()
+    c.val++
+    c.Unlock()
+}
+
+func (c *counter) Value() (int) {
+    return c.val
+}
+```
+
+with this code we are locking the counter object so that it could perform the add operation before other access it.
+
+we could also attached the locking logic in the goroutine code, however, attaching it to object were the advised approach.
+
+```go
+func (c *counter) Add(int) {
+    c.val++
+}
+
+func (c *counter) Value() (int) {
+    return c.val
+}
+
+func main() {
+    runtime.GOMAXPROCS(2)
+
+    var wg sync.WaitGroup
+    var mtx sync.Mutex
+    var meter counter
+
+    for i := 0; i < 1000; i++ {
+        wg.Add(1)
+
+        go func() {
+            for j := 0; j < 1000; j++ {
+                mtx.Lock()
+                meter.Add(1)
+                mtx.Unlock()
+            }
+
+            wg.Done()
+        }()
+    }
+
+    wg.Wait()
+    fmt.Println(meter.Value())
+}
+```
