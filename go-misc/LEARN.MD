@@ -578,3 +578,70 @@ run `go get github.com/stretchr/testify` to get this package. this package conta
 | `mock`     | Tools to mock an object while testing                                   |
 | `require`  | similiar with assert, however it stop the testing immidiately when fail |
 | `suite`    | Tools for testing for `struct` and `method`                             |
+
+## Generics
+
+Generic is a way to define data type when the function are being called rather than on the function definition itself.
+
+### Generic function example
+
+```go
+func Sum(numbers []int) int {
+    var total int
+    for _, e := range numbers {
+        total += e
+    }
+    return total
+}
+
+func SumGeneric[V int | float32 | float64](numbers []V) V {
+    var total V
+    for _, e := range numbers {
+        total += e
+    }
+    return total
+}
+
+// when calling
+SumGeneric[int]([]int{1, 2, 3, 4, 5})
+SumGeneric[float32]([]float32{2.5, 7.2})
+SumGeneric[float64]([]float64{1.23, 6.33, 12.6})
+// or
+SumGeneric([]int{1, 2, 3, 4, 5})
+SumGeneric([]float32{2.5, 7.2})
+SumGeneric([]float64{1.23, 6.33, 12.6})
+```
+
+### `comparable`
+
+`comaprable` keyword, is used to make the data type to be any, example
+
+```go
+func MyPrint[K comparable](para K) {
+    fmt.Println(para)
+}
+```
+
+### Generic Type Constraint
+
+```go
+type Number interface {
+    int64 | float64
+}
+
+func Add[V Number](a,b V) V {
+    return a + b
+}
+```
+
+### Generic Struct
+
+```go
+type UserModel[T int | float64] struct {
+    Name string
+    Scores []T
+}
+
+var m1 UserModel[int]
+m1.Scores = []int{1,2,3}
+```
